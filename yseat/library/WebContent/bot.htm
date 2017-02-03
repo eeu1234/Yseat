@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<link rel="stylesheet" href="css/jquery-ui.css" />
+<script src="js/jquery-1.12.4.js"></script>
+<script src="js/jquery-ui.js"></script>
+<style>
+/* 메인 틀 작성 */
+body {
+	margin: 0px;
+	padding: 0px;
+}
+
+#container {
+	top: 0;
+	left: 0;
+	width: 1100px;
+	height: 700px;
+	margin: 0px auto;
+	padding: 0px;
+	background-color: gray;
+}
+
+#main {
+	position: relative;
+	top: 0;
+	left: 0;
+	float: left;
+	width: 880px;
+	height: 700px;
+	float: left;
+}
+
+#side {
+	position: relative;
+	top: 0;
+	left: 0;
+	text-align: center;
+	float: left;
+	background-color: red;
+	width: 200px;
+	height: 700px;
+}
+
+#info {
+	position: relative;
+	top: 0;
+	left: 0;
+	width: 880px;
+	height: 80px;
+	background-color: green;
+	text-align: center;
+}
+
+/* side 입력 */
+#seatCnt_input {
+	float: left;
+	margin: 0 auto;
+	width: 98%;
+	height: 10%;
+	border: 2px solid yellow;
+}
+
+#seat_yet_left {
+	position: relative;
+	top: 0;
+	left: 0;
+	float: left;
+	margin: 0 auto;
+	width: 98%;
+	height: 44%;
+	border: 2px solid yellow;
+}
+
+#product {
+	float: left;
+	margin: 0 auto;
+	width: 98%;
+	height: 44%;
+	border: 2px solid yellow;
+}
+/* info 작성 */
+#company {
+	float: left;
+	width: 15%;
+	height: 80px;
+	border: 1px solid purple;
+}
+
+#nowSeat {
+	position: relative;
+	top: 0;
+	left: 0;
+	float: left;
+	width: 44%;
+	height: 80px;
+	border: 1px solid purple;
+}
+
+.nowSeat {
+	float: left;
+	width: 33%;
+	height: 80px;
+}
+
+#showStateImg {
+	float: left;
+	width: 20%;
+	height: 80px;
+	border: 1px solid purple;
+}
+
+#nowTime {
+	float: left;
+	width: 20%;
+	height: 80px;
+	border: 1px solid purple;
+}
+
+#company #companyName, #company #location {
+	float: left:       
+   width: 100%;
+	height: 50%;
+	border: 1px solid pink;
+}
+
+/* 맵 css 시작*/
+#map {
+	position: absolute;
+	width: 100%;
+	height: 620px;
+	background-color: blue;
+	z-index: 0;
+}
+
+/* 좌석 css 시작*/
+#pre_seat_case {
+	width: 150px;
+	height: 100px;
+	position: relative;
+	margin: 0 auto;
+	margin-top: 100px;
+	background-color: gray;
+}
+
+.pre_seat {
+	width: 90px;
+	height: 70px;
+	position: absolute;
+	top: 20px;
+	left: 32px;
+	background-color: orange;
+	z-index: 100;
+}
+
+.af_seat {
+	width: 90px;
+	height: 70px;
+	position: absolute;
+	background-color: purple;
+	z-index: 100;
+}
+
+/* Reset 버튼 */
+#resetCase {
+	width: 100%;
+	height: 30px;
+	position: absolute;
+	bottom: 0;
+}
+
+#reset_btn {
+	
+}
+</style>
+<script>
+	var seat = [];//좌석 넘버링용 배열
+	$(function() {
+		/* 좌석 배치 이벤트 */
+
+		$(document).click(function() {
+			//alert('Handler for .mousedown() called.');
+			$(".pre_seat, .af_seat").draggable({
+				containment : "#map",
+				snap : true,
+				//다른좌석과 객체가 겹칠때 revert를 시킨다
+				revert : "valid"
+			//grid:[5,5]
+			});
+			$(".pre_seat, .af_seat").droppable({
+				classes : {
+					"ui-droppable-active" : "ui-state-active",
+					"ui-droppable-hover" : "ui-state-hover"
+				}
+			});
+
+		});
+
+		//총 좌석수 숫자 변경
+		$("#totalCntChangeB").click(function() {
+			var totalCntChangeT = $("#totalCntChangeT").val();//입력 받은 좌석 수
+			if (totalCntChangeT != "") {
+				console.log(totalCntChangeT);
+				if (confirm("기존 좌석 배치가 리셋 됩니다.계속 진행 하시겠습니까?") == true) {
+
+					$(".af_seat").remove();//추후 쿼리로 모든 좌석 초기화 시키기
+
+				} else {//confirm  //취소시
+					return;
+				}
+			}//totalCntChangeT
+		})
+
+		//추가 좌석 수 확인을 누르면
+		var n = 1;
+		$("#confirm").click(
+				function() {
+
+					var newSeatCnt = $("#input_seat").val();//입력 받은 좌석 수
+					var pre_seat_case = document
+							.getElementById("pre_seat_case");
+					var pre_seat = $(".pre_seat");
+
+					for (var i = parseInt(newSeatCnt); i > 0; i--) {//갯수 만큼 div 생성
+						seat[i + pre_seat.length] = document
+								.createElement("div");//객체 생성
+						seat[i + pre_seat.length].setAttribute("id", "s"
+								+ (i + pre_seat.length) + "");//id 지정 
+						seat[i + pre_seat.length].setAttribute("class",
+								"pre_seat");//class 이름 지정
+						seat[i + pre_seat.length].setAttribute("num",
+								(i + pre_seat.length));
+						//console.log("i:"+i +"/"+"newSeatCnt:"+newSeatCnt);
+						seat[i + pre_seat.length].innerHTML = i
+								+ pre_seat.length + "";//번호 넘버링
+						pre_seat_case.appendChild(seat[i + pre_seat.length]);
+
+					}//for
+
+					/* 좌석 취소 이벤트(오른쪽클릭) -->시점 때문에 여기서 생성*/
+					//if(n==1){
+					$(".pre_seat").unbind("dblclick");
+					$(".pre_seat").dblclick(function() {
+						//if($(this).parents("#map")[0]==$("#map")[0]){
+
+						var num = $(this).attr("num");
+						console.log(num);
+						seat.splice(num, 1);
+
+						for (var n = parseInt(num); n < seat.length; n++) {
+							console.log("num" + num);
+							//console.log("num:" + n);
+							seat[n].setAttribute("id", "s" + n);
+							seat[n].setAttribute("num", n);
+							seat[n].innerHTML = n; //번호 넘버링
+							//console.log("seat.length:" + seat.length);
+						}
+						$(this).remove();
+
+						for (var n = 0; n < seat.length; n++) {
+							//console.log(seat[n]);
+						}
+					});
+					// n++;
+
+					/* for(var n in seat){
+					   console.log("seat:"+seat[n].getAttribute("num"));
+					} */
+
+				})
+
+		$(".af_seat").dblclick(function() {
+			//if($(this).parents("#map")[0]==$("#map")[0]){
+			$(this).remove();
+			//}            
+		});
+
+		
+		
+	      
+	      
+	      
+	      
+		
+	});//onload
+	
+	
+	
+</script>
+</head>
+<body>
+	<div id="container">
+		<div id="side">
+
+			<div id="seatCnt_input">
+				추가 좌석수 입력 <br> <input type="text" id="input_seat" size="8"
+					value="" placeholder="최대 3자리" /><input type="button" id="confirm"
+					value="확인">
+			</div>
+			<div id="seat_yet_left">
+				배치 안된 divs
+				<div id="pre_seat_case">
+					<!-- 열람실좌석 객체 위치 -->
+					<!-- <div id="s1" class="seat_one">
+               </div> -->
+
+
+
+				</div>
+			</div>
+			<div id="product">
+				<div id="resetCase">
+					<input type="button" id="reset_btn" value="초기화" style="width: 45%;" />
+					<input type="button" id="save_btn" value="저장" style="width: 45%;" />
+				</div>
+			</div>
+		</div>
+
+		<div id="main">
+			<div id="info">
+				<div id="company">
+					<div id="companyName">
+						<select id="university">
+							<option value="용인대학교">용인대학교</option>
+							<!-- <option value="사과">사과</option>
+                     <option value="파인애플" selected="selected">파인애플</option> -->
+						</select>
+					</div>
+					<div id="location">
+						<select id="univer_location">
+							<option value="신관 4층">신관 4층</option>
+							<!-- <option value="사과">사과</option>
+                     <option value="파인애플" selected="selected">파인애플</option> -->
+						</select>
+					</div>
+				</div>
+				<div id="nowSeat">
+					<!-- 총 좌석 수를 기본 value로 둔다 DB에서 불러와서 value에 넣기 -->
+					<div class="nowSeat">
+						총 좌석 수<br> <input type="text" size="3" id="totalCntChangeT"
+							disabled="disabled" />
+					</div>
+					<!-- 처음 로딩시 DB에서 배정 된 갯수 불러온다. value = 넣기    -->
+					<div class="nowSeat">
+						사용중<br> <input type="text" size="3" value=""
+							id="nowUsingSeatCnt" disabled="disabled" />
+
+					</div>
+					<div class="nowSeat">
+						빈 좌석<br> <input type="text" size="3" value=""
+							id="seat_yet_info" disabled="disabled" />
+					</div>
+				</div>
+				<div id="showStateImg">색깔별 정보 이미지 표시</div>
+				<div id="nowTime">2017-01-09 오후 4:33</div>
+
+			</div>
+			<div id="map">
+				<div id="s50" class="af_seat">50</div>
+
+			</div>
+		</div>
+		<div style="clear: both;"></div>
+	</div>
+
+</body>
+</html>

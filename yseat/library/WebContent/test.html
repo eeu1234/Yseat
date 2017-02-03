@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<link rel="stylesheet" href="css/jquery-ui.css" />
+<script src="js/jquery-1.12.4.js"></script>
+<script src="js/jquery-ui.js"></script>
+<script>
+	
+	function one1(){
+		var pre_seat_case = document.getElementById("pre_seat_case");
+		console.log(header.style.left);
+	}
+  	
+  
+	window.onload = function() { 
+		var header = document.getElementById('pre_seat_case'); // header 객체에 onclick 이벤트 속성을 연결 header.onclick = function() { alert('클릭'); // 이벤트를 제거, 한번만 실행이 됨 header.onclick = null; } };
+		// header 객체에 onclick 이벤트 속성을 연결
+		header.onclick = function() { 
+			console.log(header.style.left);
+		}
+		
+	}
+
+
+
+
+	
+</script>
+<style>
+#pre_seat_case{
+	position:absolute;
+	top:0;
+	left:20;
+	background-color:yellow;
+	width:20px;
+	height:20px;
+}
+</style>
+</head>
+<body>
+
+
+	<div id="pre_seat_case">
+		
+	</div>
+	
+	<input type="button" onclick="one1();"/>
+
+</body>
+</html>
