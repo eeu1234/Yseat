@@ -153,7 +153,7 @@ body {
    background-color: gray;
 }
 
-.pre_seat {
+.pre_seat{
    width: 90px;
    height: 70px;
    position: absolute;
@@ -163,12 +163,21 @@ body {
    z-index: 100;
 }
 
-.af_seat {
+.pre_seat .left_seat {
    width: 90px;
    height: 70px;
    position: absolute;
-   background-color: purple;
+   background-color: orange;
    z-index: 100;
+   text-align:center;
+}
+.pre_seat .right_seat{
+   width: 90px;
+   height: 70px;
+   position: absolute;
+   
+   z-index: 100;
+   text-align:center;
 }
 .com_seat {
    width: 90px;
@@ -176,6 +185,7 @@ body {
    position: absolute;
    background-color: red;
    z-index: 100;
+   text-align:center;
 }
 /* Reset 버튼 */
 #resetCase {
@@ -191,42 +201,113 @@ body {
 </style>
 <script>
    var seat = [];//좌석 넘버링용 배열
+   var dupliCheck;
    $(function() {
       /* 좌석 배치 이벤트 */
 
       $(document).click(function() {
          //alert('Handler for .mousedown() called.');
-         $(".pre_seat, .af_seat").draggable({
+         $(".pre_seat").draggable({
             containment : "#map",
             snap : true
             //다른좌석과 객체가 겹칠때 revert를 시킨다
             //grid:[5,5]
          });
          
-         
-         $('.pre_seat').mouseup(function(event){
-            var c3= document.getElementById("pre_seat_case").lastChild.cloneNode();
-            var num = c3.getAttribute("num");
-            c3.setAttribute("class","af_seat ui-draggable ui-draggable-handle");
-            c3.innerHTML = num;
-            //좌표를 조정해줘야함
-            console.log(c3.style.left);
-            console.log(c3.style.top);
-            c3.style.left = parseInt(c3.style.left.replace("px",""))-175+"px";
-            c3.style.top = parseInt(c3.style.top.replace("px",""))+111+"px";            
+         //왼쪾에 있는 좌석을 드래그해서 옮기면
+         $('.pre_seat.left_seat').draggable({
+        	  
+        	 stop : function(){              
+        		 var pre_seat = $(".pre_seat");
+                 dupliCheck = collision_(jQuery.makeArray(pre_seat));
+                 console.log(dupliCheck);	
+                if(dupliCheck == undefined){
+                	console.log(dupliCheck);
+                
+                	console.log("undefined");
+                	var c3= document.getElementById("pre_seat_case").lastChild.cloneNode();
+		            var num = c3.getAttribute("num");
+		            c3.setAttribute("class","pre_seat right_seat");
+		            c3.style.backgroundColor = "purple";
+		            $(c3).css("text-align","center");
+		            c3.innerHTML = num;
+		            //좌표를 조정해줘야함
+		            //console.log(c3.style.left);
+		            //console.log(c3.style.top);
+		            c3.style.left = parseInt(c3.style.left.replace("px",""))-175+"px";
+		            c3.style.top = parseInt(c3.style.top.replace("px",""))+117+"px";            
+		            
+		            var map = document.getElementById("map");
+		            map.appendChild(c3);       
+		            document.getElementById("pre_seat_case").lastChild.remove();
+		            
+		            //드래그를 마치고나서 좌석객체를 복사한뒤 좌석삭제 함수가 생서잉 되어야함
+		            del_seat();
+                }else if(dupliCheck == true){
             
-            var map = document.getElementById("map");
-            map.appendChild(c3);       
-            document.getElementById("pre_seat_case").lastChild.remove();
+                
+                	console.log("겹침");
+                	
+                }else{
+                	console.log("안겹침");
+                	var c3= document.getElementById("pre_seat_case").lastChild.cloneNode();
+		            var num = c3.getAttribute("num");
+		            c3.setAttribute("class","pre_seat right_seat");
+		            c3.style.backgroundColor = "purple";
+		            $(c3).css("text-align","center");
+		            c3.innerHTML = num;
+		            //좌표를 조정해줘야함
+		            //console.log(c3.style.left);
+		            //console.log(c3.style.top);
+		            c3.style.left = parseInt(c3.style.left.replace("px",""))-175+"px";
+		            c3.style.top = parseInt(c3.style.top.replace("px",""))+117+"px";            
+		            
+		            var map = document.getElementById("map");
+		            map.appendChild(c3);       
+		            document.getElementById("pre_seat_case").lastChild.remove();
+		            
+		            //드래그를 마치고나서 좌석객체를 복사한뒤 좌석삭제 함수가 생서잉 되어야함
+		            del_seat();
+                }
+              
+        	 },
+        	 revert : function(){    
+  	     		if(dupliCheck){
+  	     			console.log("튕겨라");
+  	     			return true;
+  	     		}else{
+  	     			console.log("튕기지마");
+  	     			return false;
+  	     		}
+  	     	}
+	         
+	           
+        	 
+         });
+         
+         
+         
+         $('.pre_seat.right_seat').draggable({
+         	
+        	 revert : function() {
+        		 var pre_seat = $(".pre_seat.right_seat");
+                 var dupliCheck = collision_(jQuery.makeArray(pre_seat));
+        	 
+	              if (dupliCheck) {
+	                 return true;
+	              }else{
+	             	return false;
+	              }
+         	  }
          });
          
          /* 마우스 move를 통해 겹치는지 안겹치는지 실시간 감지한다 */
-          $('.af_seat').mousemove(function(event){
-             var pre_seat = $(".af_seat");
+         /* $('.pre_seat').mousemove(function(event){
+             var pre_seat = $(".pre_seat.right_seat");
              var dupliCheck = collision_(jQuery.makeArray(pre_seat));
              console.log(dupliCheck);
-                $('.af_seat').draggable({
-                   snap : true,
+                $('.pre_seat.right_seat').draggable({
+                   	snap : true,
                    
                      //stop : function(){ // 드래그 종료시 실행
                        
@@ -235,12 +316,18 @@ body {
                             //console.log($("pre_seat_case"));
                          if (dupliCheck) {
                             return true;
+                         }else{
+                        	return false;
                          }
                       }
                  })
-           });
+           }); */
+          
       });
-      
+       //저장버튼을 누르면 보라색 좌석을 전부 빨강으로 바꿔줌
+      $("#save_btn").click(function(){
+         $("#map .pre_seat").prop("class","com_seat");
+      });
 
       //총 좌석수 숫자 변경
       $("#totalCntChangeB").click(function() {
@@ -259,70 +346,79 @@ body {
       
 
       //추가 좌석 수 확인을 누르면
-      var n = 1;
+      
       $("#confirm").click(
+    		
             function() {
 
                var newSeatCnt = $("#input_seat").val();//입력 받은 좌석 수
                var pre_seat_case = document
                      .getElementById("pre_seat_case");
                var pre_seat = $(".pre_seat");
+               var af_seat = $(".pre_seat");
 
                for (var i = parseInt(newSeatCnt); i > 0; i--) {//갯수 만큼 div 생성
-                  seat[i + pre_seat.length] = document
-                        .createElement("div");//객체 생성
-                  seat[i + pre_seat.length].setAttribute("id", "s"
-                        + (i + pre_seat.length) + "");//id 지정 
-                  seat[i + pre_seat.length].setAttribute("class",
-                        "pre_seat");//class 이름 지정
-                  seat[i + pre_seat.length].setAttribute("num",
-                        (i + pre_seat.length));
-                  //console.log("i:"+i +"/"+"newSeatCnt:"+newSeatCnt);
-                  seat[i + pre_seat.length].innerHTML = i
-                        + pre_seat.length + "";//번호 넘버링
-                  pre_seat_case.appendChild(seat[i + pre_seat.length]);
+            	   seat[i + pre_seat.length] = document
+                   .createElement("div");//객체 생성
+	               seat[i + pre_seat.length].setAttribute("id", "s"
+	                     + (i + pre_seat.length) + "");//id 지정 
+	               seat[i + pre_seat.length].setAttribute("class",
+	                     "pre_seat left_seat");//class 이름 지정
+	               seat[i + pre_seat.length].setAttribute("num",
+	                     (i + pre_seat.length));
+	               //console.log("i:"+i +"/"+"newSeatCnt:"+newSeatCnt);
+	               seat[i + pre_seat.length].innerHTML = i
+	                     + pre_seat.length + "";//번호 넘버링
+	               pre_seat_case.appendChild(seat[i + pre_seat.length]);
 
                }//for
 
                /* 좌석 취소 이벤트(오른쪽클릭) -->시점 때문에 여기서 생성*/
                //if(n==1){
-               $(".pre_seat").unbind("dblclick");
-               $(".pre_seat").dblclick(function() {
-                  //if($(this).parents("#map")[0]==$("#map")[0]){
-
-                  var num = $(this).attr("num");
-                  console.log(num);
-                  seat.splice(num, 1);
-
-                  for (var n = parseInt(num); n < seat.length; n++) {
-                     console.log("num" + num);
-                     //console.log("num:" + n);
-                     seat[n].setAttribute("id", "s" + n);
-                     seat[n].setAttribute("num", n);
-                     seat[n].innerHTML = n; //번호 넘버링
-                     //console.log("seat.length:" + seat.length);
-                  }
-                  $(this).remove();
-
-                  for (var n = 0; n < seat.length; n++) {
-                     //console.log(seat[n]);
-                  }
-               });
+               
                // n++;
 
                /* for(var n in seat){
                   console.log("seat:"+seat[n].getAttribute("num"));
                } */
 
-            })
-
-      $(".af_seat").dblclick(function() {
-         //if($(this).parents("#map")[0]==$("#map")[0]){
-         $(this).remove();
-         //}            
-      });
+            });
+      
+     
 
    });
+   
+   function del_seat(){
+	   
+	   $(".pre_seat").unbind("dblclick");
+	   $(".pre_seat").dblclick(function() {
+	      //if($(this).parents("#map")[0]==$("#map")[0]){
+	
+	       var num = $(this).attr("num");
+	       /* console.log($(this).attr("class"));
+	       console.log(num); */
+	       seat.splice(num, 1);
+		   
+	       for (var n = parseInt(num); n < seat.length; n++) {
+	         console.log("num" + num);
+	         console.log("num:" + n);
+	         $(".right_seat")[n].setAttribute("id","s"+n);
+	         $(".right_seat")[n].setAttribute("num",n);
+	         $(".right_seat")[n].innerHTML = n;
+	         
+	         /* 
+	         seat[n].setAttribute("id", "s" + n);
+	         seat[n].setAttribute("num", n);
+	         seat[n].innerHTML = n; //번호 넘버링 
+	         */
+	         console.log("seat.length:" + seat.length);
+	       }
+	       $(this).remove();
+  		});
+   }
+      
+   
+   
    function collision_(arr) {
          //console.log(arr.constructor);
           if (arr.length > 1) {
@@ -345,14 +441,14 @@ body {
             var y1 = $s1.offset().top;
             var h1 = $s1.outerHeight(true);
             var w1 = $s1.outerWidth(true);
-            var b1 = y1 + h1 -10;
-            var r1 = x1 + w1 -10;
+            var b1 = y1 + h1 -1;
+            var r1 = x1 + w1 -1;
             var x2 = $s2.offset().left;
             var y2 = $s2.offset().top;
             var h2 = $s2.outerHeight(true);
             var w2 = $s2.outerWidth(true);
-            var b2 = y2 + h2 -10;
-            var r2 = x2 + w2 -10;
+            var b2 = y2 + h2 -1;
+            var r2 = x2 + w2 -1;
               
             if (b1 < y2 || y1 > b2 || r1 < x2 || x1 > r2) return false;
             return true;
@@ -382,7 +478,7 @@ body {
          <div id="product">
             <div id="resetCase">
                <input type="button" id="reset_btn" value="초기화" style="width: 45%;" />
-               <input type="button" id="reset_btn" value="저장" style="width: 45%;" />
+               <input type="button" id="save_btn" value="저장" style="width: 45%;" />
             </div>
          </div>
       </div>
