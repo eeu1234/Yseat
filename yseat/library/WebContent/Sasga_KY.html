@@ -216,13 +216,26 @@ body {
          
          //왼쪾에 있는 좌석을 드래그해서 옮기면
          $('.pre_seat.left_seat').draggable({
-        	  
-        	 stop : function(){              
+        	
+        	 //드래그를해서 옮기면서 좌석이 겹치는지 안겹치는지를 실기간으로 확인을해준다
+        	 drag : function(event,ui){
         		 var pre_seat = $(".pre_seat");
                  dupliCheck = collision_(jQuery.makeArray(pre_seat));
-                 console.log(dupliCheck);	
+        	
+        		 if(dupliCheck == true){
+                 	console.log("drag겹침");
+                 	$(this).draggable("option", "revert", true);
+                 }else{
+                	 console.log("drag안겹침");
+                	$(this).draggable("option", "revert", false);
+                 }
+        	 },
+        	 
+        	 //드래그를 하고있다가 스탑을 하면 드래그에서의 dupliCheck 변수의 값을 가져와서 그값에 따라 좌석을 revert하거나 배치하는 작업을 한다.
+        	 stop : function(event,ui){	
+                 
+                //제일 처음배치할때는 좌석이 하나이기때문에 undefined이다
                 if(dupliCheck == undefined){
-                	console.log(dupliCheck);
                 
                 	console.log("undefined");
                 	var c3= document.getElementById("pre_seat_case").lastChild.cloneNode();
@@ -243,10 +256,10 @@ body {
 		            
 		            //드래그를 마치고나서 좌석객체를 복사한뒤 좌석삭제 함수가 생서잉 되어야함
 		            del_seat();
+		            
+		        //이게 실행되면 revert옵션이 발생해야한다.
                 }else if(dupliCheck == true){
-            
-                
-                	console.log("겹침");
+            		console.log("stop겹칩");
                 	
                 }else{
                 	console.log("안겹침");
@@ -270,16 +283,7 @@ body {
 		            del_seat();
                 }
               
-        	 },
-        	 revert : function(){    
-  	     		if(dupliCheck){
-  	     			console.log("튕겨라");
-  	     			return true;
-  	     		}else{
-  	     			console.log("튕기지마");
-  	     			return false;
-  	     		}
-  	     	}
+        	 }
 	         
 	           
         	 
