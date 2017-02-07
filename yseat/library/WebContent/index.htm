@@ -7,285 +7,526 @@
 <link rel="stylesheet" href="css/main.css" />
 <script src="js/jquery-1.12.4.js"></script>
 <script src="js/jquery-ui.js"></script>
+<style>
+.rec1 {
+   position: absolute; 
+   width : 50px;
+   height: 50px;
+   background-color: green;
+   z-index: 800;
+   width: 50px;
+}
+.rec2 {
+   position: absolute; 
+   top:120px;
+   left:20px;
+   width:10px;
+   height:50px;
+   background-color: lime;
+   z-index: 800;
+}
+.rec3 {
+   position: absolute; 
+   top:120px;
+   left:80px;
+   width:50px;
+   height:10px;
+   background-color: lime;
+   z-index: 800;
+}
 
+.circle {
+   position: absolute;
+   top:50px;
+   width: 50px;
+   height: 50px;
+   background-color: yellow;
+   border-radius: 50px;
+   z-index: 800;
+}
+</style>
 <script>
-	var seat = [];//좌석 넘버링용 배열
-	$(function() {
-		/* 좌석 배치 이벤트 */
+   var seat = [];//좌석 넘버링용 배열
+   //가로 좌석 갯수
+   var newSeatCnt_garo;
+   //세로 좌석 갯수
+   var newSeatCnt_sero;
+   //좌석 최대 갯수
+   var newSeatCnt = 0;
+   //좌석 시작 번호
+   var nSeat = 1;
+   //좌석 겹치는지 확인
+   var dupliCheck;
+   //좌석 아이디
+   var seatId ;
+   
+   $(function() {
+	   
+      //장애물 사각형1 resize 
+      $(".rec1").resizable({
+         aspectRatio : 1 / 1,
+         maxWidth : 300
+      })
+      //장애물 사각형2 resize 
+      $(".rec2").resizable({
+         aspectRatio : 1 / 4,
+         maxWidth : 100
+      })
+      //장애물 사각형3 resize 
+      $(".rec3").resizable({
+         aspectRatio : 4 / 1,
+         maxWidth : 300
+      })
+      //장애물 원형 resize 
+      $(".circle").resizable({
+         aspectRatio : 1 / 1,
+         maxWidth : 300
+      }).on('resize', function(e) {
+         $(this).css("border-radius", $(this).width());//크기에 맞게 radius 조절
+      })
+      $(".obstacle").draggable({
+         containment : "#map"
+      });
+      $(".obstacle_af").unbind("dblclick");
+      $(".obstacle_af").dblclick(function() {
 
-		$(document).click(function() {
-			//alert('Handler for .mousedown() called.');
-			$(".pre_seat, .af_seat").draggable({
-				containment : "#map",
-				snap : true,
-				//다른좌석과 객체가 겹칠때 revert를 시킨다
-				revert : "valid"
-			//grid:[5,5]
-			});
-			$(".pre_seat, .af_seat").droppable({
-				classes : {
-					"ui-droppable-active" : "ui-state-active",
-					"ui-droppable-hover" : "ui-state-hover"
-				}
-			});
+         $(this).remove();
 
-		});
+      });
 
-		//총 좌석수 숫자 변경
-		$("#totalCntChangeB").click(function() {
-			var totalCntChangeT = $("#totalCntChangeT").val();//입력 받은 좌석 수
-			if (totalCntChangeT != "") {
-				console.log(totalCntChangeT);
-				if (confirm("기존 좌석 배치가 리셋 됩니다.계속 진행 하시겠습니까?") == true) {
+      /* 좌석 배치 이벤트 */
+      
+      $(document).click(function() {
+         //alert('Handler for .mousedown() called.');
+         $(".pre_seat").draggable({
+            containment : "#map",
+            snap : true
+            //다른좌석과 객체가 겹칠때 revert를 시킨다
+            //grid:[5,5]
+         });
+         
+         //왼쪾에 있는 좌석을 드래그해서 옮기면
+         $('.pre_seat.left_seat').draggable({
+           
+            //드래그를해서 옮기면서 좌석이 겹치는지 안겹치는지를 실기간으로 확인을해준다
+            drag : function(event,ui){
+               var pre_seat = $(".pre_seat");
+                 dupliCheck = collision_(jQuery.makeArray(pre_seat));
+           
+               if(dupliCheck == true){
+                    console.log("drag겹침");
+                    $(this).draggable("option", "revert", true);
+                 }else{
+                    console.log("drag안겹침");
+                   $(this).draggable("option", "revert", false);
+                 }
+            },
+            
+            //드래그를 하고있다가 스탑을 하면 드래그에서의 dupliCheck 변수의 값을 가져와서 그값에 따라 좌석을 revert하거나 배치하는 작업을 한다.
+            stop : function(event,ui){   
+                 
+            //제일 처음배치할때는 좌석이 하나이기때문에 undefined이다
+            if(dupliCheck == undefined){
+            
+               console.log("undefined");
+               var c3= document.getElementById("pre_seat_case").lastChild.cloneNode();
+               console.log("cs"+c3);
+               var num = c3.getAttribute("num");
+               c3.setAttribute("class","pre_seat right_seat");
+               
+               c3.style.backgroundColor = "purple";
+               $(c3).css("text-align","center");
+               c3.innerHTML = num;
+               //좌표를 조정해줘야함
+               //console.log(c3.style.left);
+               //console.log(c3.style.top);
+               c3.style.left = parseInt(c3.style.left.replace("px",""))-175+"px";
+               c3.style.top = parseInt(c3.style.top.replace("px",""))+117+"px";            
+               
+               var map = document.getElementById("map");
+               map.appendChild(c3);       
+               document.getElementById("pre_seat_case").lastChild.remove();
+               
+               //삭제 메서드 추가 -/// 문제점 현재 rigth_seat가 아니라서 인식 안됨.
+               $(seatId).dblclick(function() {
+                  console.log("삭제삭제");
+                  var num = $(this).attr("num");
+                  console.log("nUM :" + num);
+                  
+                  seat.splice(num, 1);
+                  
+                  for (var n = parseInt(num); n < seat.length-1; n++) {
+                    console.log("num" + num);
+                    console.log("num:" + n);
+                    $(".pre_seat.right_seat")[n].setAttribute("id","s"+n);
+                    $(".pre_seat.right_seat")[n].setAttribute("num",n);
+                    $(".pre_seat.right_seat")[n].innerHTML = n;
+                    
+                    console.log("seat.length:" + seat.length);
+                  }
+                  $(this).remove();
+                  nSeat--;
+                  document.getElementById("pre_seat_case").lastChild.setAttribute("id","s"+(nSeat-1));    
+                  document.getElementById("pre_seat_case").lastChild.setAttribute("num",nSeat-1);    
+                  document.getElementById("pre_seat_case").lastChild.innerHTML = nSeat-1;    
+               });
+               
+               
+               //추가 좌석 수 확인 시 좌석 1개 생성. 조건을 통해 최대 갯수 생성 못하게 함.
+               if(nSeat <= newSeatCnt){
+                  addSeat(newSeatCnt_garo, newSeatCnt_sero);
+               }//if
+              
+            //이게 실행되면 revert옵션이 발생해야한다.
+            }else if(dupliCheck == true){
+               console.log("stop겹칩");
+                 
+            }else{
+               console.log("안겹침");
+               var c3= document.getElementById("pre_seat_case").lastChild.cloneNode();
+               var num = c3.getAttribute("num");
+               c3.setAttribute("class","pre_seat right_seat");
+               c3.style.backgroundColor = "purple";
+               $(c3).css("text-align","center");
+               c3.innerHTML = num;
+               //좌표를 조정해줘야함
+               //console.log(c3.style.left);
+               //console.log(c3.style.top);
+               c3.style.left = parseInt(c3.style.left.replace("px",""))-175+"px";
+               c3.style.top = parseInt(c3.style.top.replace("px",""))+117+"px";            
+                
+               var map = document.getElementById("map");
+               map.appendChild(c3);       
+               document.getElementById("pre_seat_case").lastChild.remove();
+               //삭제 메서드 추가 -/// 문제점 현재 rigth_seat가 아니라서 인식 안됨.
+               $(seatId).dblclick(function() {
+                  console.log("삭제삭제");
+                  var num = $(this).attr("num");
+                  
+                  seat.splice(num, 1);
+                  
+                  for (var n = parseInt(num); n < seat.length-1; n++) {
+                    console.log("num" + num);
+                    console.log("num:" + n);
+                    $(".pre_seat.right_seat")[n].setAttribute("id","s"+n);
+                    $(".pre_seat.right_seat")[n].setAttribute("num",n);
+                    $(".pre_seat.right_seat")[n].innerHTML = n;
+                    
+                    console.log("seat.length:" + seat.length);
+                  }
+                  $(this).remove();
+                  nSeat--; 
+                  document.getElementById("pre_seat_case").lastChild.setAttribute("id","s"+(nSeat-1));    
+                  document.getElementById("pre_seat_case").lastChild.setAttribute("num",nSeat-1);    
+                  document.getElementById("pre_seat_case").lastChild.innerHTML = nSeat-1; 
+               });
+               //추가 좌석 수 확인 시 좌석 1개 생성. 조건을 통해 최대 갯수 생성 못하게 함.
+               if(nSeat <= newSeatCnt){
+                  addSeat(newSeatCnt_garo, newSeatCnt_sero);
+               }//if
+               
+            }
+            
+            }
+           
+         });
+         
+         
+         $('.pre_seat.right_seat').draggable({
+            
+            revert : function() {
+               var pre_seat = $(".pre_seat.right_seat");
+                 var dupliCheck = collision_(jQuery.makeArray(pre_seat));
+            
+               if (dupliCheck) {
+                  return true;
+               }else{
+                 return false;
+               }
+              }
+         });
+         
+      });
+      //총 좌석수 숫자 변경
+      $("#totalCntChangeB").click(function() {
+         var totalCntChangeT = $("#totalCntChangeT").val();//입력 받은 좌석 수
+         if (totalCntChangeT != "") {
+            console.log(totalCntChangeT);
+            if (confirm("기존 좌석 배치가 리셋 됩니다.계속 진행 하시겠습니까?") == true) {
 
-					$(".af_seat").remove();//추후 쿼리로 모든 좌석 초기화 시키기
+               $(".com_seat").remove();//추후 쿼리로 모든 좌석 초기화 시키기
+               
+      
+            } else {//confirm  //취소시
+               return;
+            }
+         }//totalCntChangeT
+      });
 
-				} else {//confirm  //취소시
-					return;
-				}
-			}//totalCntChangeT
-		})
+      
+      //추가 좌석 수 확인을 누르면
+      $("#confirm").click(function(){
 
-		//추가 좌석 수 확인을 누르면
-		var n = 1;
-		$("#confirm").click(
-				function() {
-					var newSeatCnt_garo = $("#input_seat_garo").val();//입력 받은 가로 좌석 수
-					var newSeatCnt_sero = $("#input_seat_sero").val();//입력 받은 세로 좌석 수
-					var newSeatCnt = newSeatCnt_sero * newSeatCnt_garo;
-					
-					var pre_seat_case = document
-							.getElementById("pre_seat_case");
-					var pre_seat = $(".pre_seat");
-					
-					//추가한 부분
-					var garo = Math.floor(880 / newSeatCnt_garo);
-					var sero = Math.floor(garo / 3 * 2);
-
-					for (var i = parseInt(newSeatCnt); i > 0; i--) {//갯수 만큼 div 생성
-						seat[i + pre_seat.length] = document
-								.createElement("div");//객체 생성
-						seat[i + pre_seat.length].setAttribute("id", "s"
-								+ (i + pre_seat.length) + "");//id 지정 
-						seat[i + pre_seat.length].setAttribute("class",
-								"pre_seat");//class 이름 지정
-						seat[i + pre_seat.length].setAttribute("num",
-								(i + pre_seat.length));
-						//console.log("i:"+i +"/"+"newSeatCnt:"+newSeatCnt);
-						seat[i + pre_seat.length].innerHTML = i
-								+ pre_seat.length + "";//번호 넘버링
-						pre_seat_case.appendChild(seat[i + pre_seat.length]);
-
-					}//for
-
-					if (garo >= 90) {//최대 크기
-						$(".pre_seat").css("width", "90px");
-						$(".pre_seat").css("height", "60px");
-
-					} else if (garo < 30) {//최소 크기
-						$(".pre_seat").css("width", "30px");
-						$(".pre_seat").css("height", "20px");
-
-					} else {
-						$(".pre_seat").css("width", garo + "px");
-						$(".pre_seat").css("height", sero + "px");
-					}
-					
-					/* 좌석 취소 이벤트(오른쪽클릭) -->시점 때문에 여기서 생성*/
-					//if(n==1){
-					$(".pre_seat").unbind("dblclick");
-					$(".pre_seat").dblclick(function() {
-						//if($(this).parents("#map")[0]==$("#map")[0]){
-
-						var num = $(this).attr("num");
-						console.log(num);
-						seat.splice(num, 1);
-	
-						for (var n = parseInt(num); n < seat.length; n++) {
-							console.log("num" + num);
-							//console.log("num:" + n);
-							seat[n].setAttribute("id", "s" + n);
-							seat[n].setAttribute("num", n);
-							seat[n].innerHTML = n; //번호 넘버링
-							console.log("seat.length:" + seat.length);
-						}
-						$(this).remove();
-
-						for (var n = 0; n < seat.length; n++) {
-							//console.log(seat[n]);
-						}
-					});
-					// n++;
-
-					/* for(var n in seat){
-					   console.log("seat:"+seat[n].getAttribute("num"));
-					} */
-
-				})
-
-		$(".af_seat").dblclick(function() {
-			//if($(this).parents("#map")[0]==$("#map")[0]){
-			$(this).remove();
-			//}            
-		});
-
+         newSeatCnt_garo = $("#input_seat_garo").val();//입력 받은 가로 좌석 수
+         newSeatCnt_sero = $("#input_seat_sero").val();//입력 받은 세로 좌석 수
+         newSeatCnt = newSeatCnt_sero * newSeatCnt_garo;
 		
-		
-		
-		
-		
-		
+         //console.log(newSeatCnt + ":" + nSeat);
+         //추가 좌석 수 확인 시 좌석 1개 생성. 조건을 통해 최대 갯수 생성 못하게 함.
+         if(nSeat <= newSeatCnt){
+            addSeat(newSeatCnt_garo, newSeatCnt_sero);
+         }//if
 
-		/*봇형 자료 2017-01-31*/
-		//초기화 버튼 누를 시 다 삭제
-	      $("#reset_btn").click(function(){
-	         var pre_seat = $(".pre_seat");
-	         
-	         for(i=0;i<pre_seat.length;i++){
-	            pre_seat[i].remove();
-	         }
-	         
-	         //좌석 출력 정보 초기화
-	         infoSeat();
-	      });   //초기화 끝
-	      
-	      //저장 버튼 누를 시 색상 변환(임시로 색깔 넣음)
-	      $("#save_btn").click(function(){
-	         var pre_seat = $(".pre_seat");
-	         
-	         for(i=0;i<pre_seat.length;i++){
-	           var num = "#s"+(1+i);
-	           //조건으로 걸려내야하는데 아직 못함.
-	           $(num).css("background-color","red");
-	           //임시로 저장된건 사용중으로 부여
-	           $(num).attr("use","사용중");
-	         }
-	         
-	         //좌석 출력 정보 초기화
-	         infoSeat();
-	         
-	      });   //저장 끝
-		
-	      /* 
-	      //좌석 상황 인터벌 시작 - 5초단위
-	      setInterval(function(){
-	         infoSeat();
-	      }, 5000);	 
-	      */
-		
-		
-	});//onload
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+      });//좌석 추가 버튼 끝.
 
-	/*봇형 자료 2017-01-31*/
-	//현재 좌석 사용 상황 함수
-	   function infoSeat(){
-	      var seat = $(".pre_seat");
-	      $("#totalCntChangeT")[0].setAttribute("value", seat.length);
-	      var use_seat = 0;
-	      for(var i=0;i<seat.length;i++){
-	         
-	         var num = "#s"+(1+i);
-	         if($(num).attr("use") == "사용중"){
-	            use_seat++;
-	         }
-	         
-	      }
-	      $("#nowUsingSeatCnt")[0].setAttribute("value", use_seat);
-	      $("#seat_yet_info")[0].setAttribute("value", parseInt(seat.length)-use_seat);
-	      
-	      
-	   }
+      $(".com_seat").dblclick(function() {
+         //if($(this).parents("#map")[0]==$("#map")[0]){
+         $(this).remove();
+         //}            
+      });
+
+      /*봇형 자료 2017-01-31*/
+      //초기화 버튼 누를 시 다 삭제
+      $("#reset_btn").click(function() {
+         var pre_seat = $(".pre_seat");
+
+         for (i = 0; i < pre_seat.length; i++) {
+            pre_seat[i].remove();
+         }
+         
+         nSeat = 1;
+         
+         //좌석 출력 정보 초기화
+         infoSeat();
+         $(".obstacle_af").remove();//모든 장애물 초기화 시키기
+      }); //초기화 끝
+
+      //저장 버튼 누를 시 색상 변환(임시로 색깔 넣음)
+      $("#save_btn").click(function() {
+         var pre_seat = $(".pre_seat");
+
+         for (i = 0; i < pre_seat.length; i++) {
+            var num = "#s" + (1 + i);
+            //조건으로 걸려내야하는데 아직 못함.
+            $(num).css("background-color", "red");
+            //임시로 저장된건 사용중으로 부여
+            $(num).attr("use", "사용중");
+         }
+
+         //좌석 출력 정보 초기화
+         infoSeat();
+
+      }); //저장 끝
+
+      /* 
+      //좌석 상황 인터벌 시작 - 5초단위
+      setInterval(function(){
+         infoSeat();
+      }, 5000);    
+       */
+
+   });//onload
+
+   /*봇형 자료 2017-01-31*/
+   //현재 좌석 사용 상황 함수
+   function infoSeat() {
+      var seat = $(".pre_seat");
+      $("#totalCntChangeT")[0].setAttribute("value", seat.length);
+      var use_seat = 0;
+      for (var i = 0; i < seat.length; i++) {
+
+         var num = "#s" + (1 + i);
+         if ($(num).attr("use") == "사용중") {
+            use_seat++;
+         }
+
+      }
+      $("#nowUsingSeatCnt")[0].setAttribute("value", use_seat);
+      $("#seat_yet_info")[0].setAttribute("value", parseInt(seat.length)
+            - use_seat);
+
+   }
+   
+   
+   function collision_(arr) {
+      //console.log(arr.constructor);
+       if (arr.length > 1) {
+           for (var x = 0; x < arr.length; x++) {
+               for (var y = 1; y < arr.length; y++) {
+                   if (x == y) {
+                       continue;
+                   }
+                   if (collision($(arr[x]), $(arr[y]))) {
+                       return true;
+                   }
+               }
+           }
+           return false;
+       }
+   }
+   
+   function collision($s1, $s2) {
+         var x1 = $s1.offset().left;
+         var y1 = $s1.offset().top;
+         var h1 = $s1.outerHeight(true);
+         var w1 = $s1.outerWidth(true);
+         var b1 = y1 + h1 -1;
+         var r1 = x1 + w1 -1;
+         var x2 = $s2.offset().left;
+         var y2 = $s2.offset().top;
+         var h2 = $s2.outerHeight(true);
+         var w2 = $s2.outerWidth(true);
+         var b2 = y2 + h2 -1;
+         var r2 = x2 + w2 -1;
+           
+         if (b1 < y2 || y1 > b2 || r1 < x2 || x1 > r2) return false;
+         return true;
+   }
+   
+   //좌석추가 메서드
+   function addSeat(){
+
+      var pre_seat_case = document.getElementById("pre_seat_case");
+      var pre_seat = $(".pre_seat");
+	  
+ 	  //추가한 부분
+      var garo = Math.floor(880 / newSeatCnt_garo);
+      var sero = Math.floor(garo / 3 * 2);
+      
+    
+      
+      seat[nSeat] = document.createElement("div");//객체 생성
+      seat[nSeat].setAttribute("id", "s"+ (nSeat) + "");//id 지정 
+      seat[nSeat].setAttribute("class","pre_seat left_seat");//class 이름 지정
+      seat[nSeat].setAttribute("num",(nSeat));
+      //console.log("i:"+i +"/"+"newSeatCnt:"+newSeatCnt);
+      seat[nSeat].innerHTML = nSeat + "";//번호 넘버링
+      pre_seat_case.appendChild(seat[nSeat]);
+	  
+      if (garo >= 90) {//최대 크기
+          $(".pre_seat").css("width", "90px");
+          $(".pre_seat").css("height", "60px");
+
+       } else if (garo < 30) {//최소 크기
+          $(".pre_seat").css("width", "30px");
+          $(".pre_seat").css("height", "20px");
+
+       } else {
+          $(".pre_seat").css("width", garo + "px");
+          $(".pre_seat").css("height", sero + "px");
+       }
+      
+      /* 좌석 취소 이벤트(오른쪽클릭) -->시점 때문에 여기서 생성*/
+      seatId = "#"+seat[nSeat].getAttribute("id");
+      console.log(seat[nSeat].getAttribute("id"));
+      console.log(seatId);
+      
+      //삭제 메서드 추가 -/// 문제점 현재 rigth_seat가 아니라서 인식 안됨.
+     /*  $(seatId).dblclick(function() {
+         console.log("삭제삭제");
+         var num = $(this).attr("num");
+         
+         seat.splice(num, 1);
+         
+         for (var n = parseInt(num); n < seat.length; n++) {
+           console.log("num" + num);
+           console.log("num:" + n);
+           $(".pre_seat.right_seat")[n].setAttribute("id","s"+n);
+           $(".pre_seat.right_seat")[n].setAttribute("num",n);
+           $(".pre_seat.right_seat")[n].innerHTML = n;
+           
+           console.log("seat.length:" + seat.length);
+         }
+         $(this).remove();
+         nSeat--;
+      });
+      */
+      console.log(seat[nSeat].getAttribute("id"));
+      console.log(seatId+"::::::");
+      nSeat++;
+
+   }//좌석 추가 끝
+   
 </script>
 </head>
 <body>
-	<div id="container">
-		<div id="side">
+   <div id="container">
+      <div id="side">
 
-		<!-- 수정 -->
-			<div id="seatCnt_input">
-				추가 좌석수 입력 <br> <input type="text" id="input_seat_garo" size="8"
-					value="" placeholder="가로" /> <input type="text"
-					id="input_seat_sero" size="8" value="" placeholder="세로" /><input
-					type="button" id="confirm" value="확인">
-			</div>
-			<div id="seat_yet_left">
-				배치 안된 divs
-				<div id="pre_seat_case">
-					<!-- 열람실좌석 객체 위치 -->
-					<!-- <div id="s1" class="seat_one">
-               </div> -->
+         <!-- 수정 -->
+         <div id="seatCnt_input">
+            추가 좌석수 입력 <br> <input type="text" id="input_seat_garo" size="8"
+               value="" placeholder="가로" /> <input type="text"
+               id="input_seat_sero" size="8" value="" placeholder="세로" /><input
+               type="button" id="confirm" value="확인">
+         </div>
+         <div id="seat_yet_left">
+            배치 안된 divs
+            <div id="pre_seat_case">
 
+            </div>
+         </div>
+         <div id="product">
+            <div id="obstacle">
+               <div class="rec1 obstacle"></div>
+               <div class="rec2 obstacle"></div>
+               <div class="rec3 obstacle"></div>
+               <div class="circle obstacle"></div>
+            </div>
+            <div id="resetCase">
+               <input type="button" id="reset_btn" value="초기화" style="width: 45%;" />
+               <input type="button" id="save_btn" value="저장" style="width: 45%;" />
+            </div>
+         </div>
+      </div>
 
-
-				</div>
-			</div>
-			<div id="product">
-				<div id="resetCase">
-					<input type="button" id="reset_btn" value="초기화" style="width: 45%;" />
-					<input type="button" id="save_btn" value="저장" style="width: 45%;" />
-				</div>
-			</div>
-		</div>
-
-		<div id="main">
-			<div id="info">
-				<div id="company">
-					<div id="companyName">
-						<select id="university">
-							<option value="용인대학교">용인대학교</option>
-							<!-- <option value="사과">사과</option>
+      <div id="main">
+         <div id="info">
+            <div id="company">
+               <div id="companyName">
+                  <select id="university">
+                     <option value="용인대학교">용인대학교</option>
+                     <!-- <option value="사과">사과</option>
                      <option value="파인애플" selected="selected">파인애플</option> -->
-						</select>
-					</div>
-					<div id="location">
-						<select id="univer_location">
-							<option value="신관 4층">신관 4층</option>
-							<!-- <option value="사과">사과</option>
+                  </select>
+               </div>
+               <div id="location">
+                  <select id="univer_location">
+                     <option value="신관 4층">신관 4층</option>
+                     <!-- <option value="사과">사과</option>
                      <option value="파인애플" selected="selected">파인애플</option> -->
-						</select>
-					</div>
-				</div>
-				<div id="nowSeat">
-					<!-- 총 좌석 수를 기본 value로 둔다 DB에서 불러와서 value에 넣기 -->
-					<div class="nowSeat">
-						총 좌석 수<br> <input type="text" size="3" id="totalCntChangeT"
-							disabled="disabled" />
-					</div>
-					<!-- 처음 로딩시 DB에서 배정 된 갯수 불러온다. value = 넣기    -->
-					<div class="nowSeat">
-						사용중<br> <input type="text" size="3" value=""
-							id="nowUsingSeatCnt" disabled="disabled" />
+                  </select>
+               </div>
+            </div>
+            <div id="nowSeat">
+               <!-- 총 좌석 수를 기본 value로 둔다 DB에서 불러와서 value에 넣기 -->
+               <div class="nowSeat">
+                  총 좌석 수<br> <input type="text" size="3" id="totalCntChangeT"
+                     disabled="disabled" />
+               </div>
+               <!-- 처음 로딩시 DB에서 배정 된 갯수 불러온다. value = 넣기    -->
+               <div class="nowSeat">
+                  사용중<br> <input type="text" size="3" value=""
+                     id="nowUsingSeatCnt" disabled="disabled" />
 
-					</div>
-					<div class="nowSeat">
-						빈 좌석<br> <input type="text" size="3" value=""
-							id="seat_yet_info" disabled="disabled" />
-					</div>
-				</div>
-				<div id="showStateImg">색깔별 정보 이미지 표시</div>
-				<div id="nowTime">2017-01-09 오후 4:33</div>
+               </div>
+               <div class="nowSeat">
+                  빈 좌석<br> <input type="text" size="3" value=""
 
-			</div>
-			<div id="map">
-				<div id="s50" class="af_seat">50</div>
+                     id="seat_yet_info" disabled="disabled" />
+               </div>
+            </div>
+            <div id="showStateImg">색깔별 정보 이미지 표시</div>
+            <div id="nowTime">2017-01-09 오후 4:33</div>
 
-			</div>
-		</div>
-		<div style="clear: both;"></div>
-	</div>
+         </div>
+         <div id="map">
+            <div id="s50" class="com_seat">50</div>
+
+         </div>
+      </div>
+      <div style="clear: both;"></div>
+   </div>
 
 </body>
 </html>
