@@ -112,8 +112,7 @@
             drag : function(event,ui){
                var pre_seat = $(".pre_seat");
                  dupliCheck = collision_(jQuery.makeArray(pre_seat));
-           
-               if(dupliCheck == true){
+               if(dupliCheck == true || $(this).position().left < 175){
                     console.log("drag겹침");
                     $(this).draggable("option", "revert", true);
                  }else{
@@ -125,60 +124,8 @@
             //드래그를 하고있다가 스탑을 하면 드래그에서의 dupliCheck 변수의 값을 가져와서 그값에 따라 좌석을 revert하거나 배치하는 작업을 한다.
             stop : function(event,ui){   
                  
-            //제일 처음배치할때는 좌석이 하나이기때문에 undefined이다
-            if(dupliCheck == undefined){
-            
-               console.log("undefined");
-               var c3= document.getElementById("pre_seat_case").lastChild.cloneNode();
-               console.log("cs"+c3);
-               var num = c3.getAttribute("num");
-               c3.setAttribute("class","pre_seat right_seat");
-               
-               c3.style.backgroundColor = "purple";
-               $(c3).css("text-align","center");
-               c3.innerHTML = num;
-               //좌표를 조정해줘야함
-               //console.log(c3.style.left);
-               //console.log(c3.style.top);
-               c3.style.left = parseInt(c3.style.left.replace("px",""))-175+"px";
-               c3.style.top = parseInt(c3.style.top.replace("px",""))+117+"px";            
-               
-               var map = document.getElementById("map");
-               map.appendChild(c3);       
-               document.getElementById("pre_seat_case").lastChild.remove();
-               
-               //삭제 메서드 추가 -/// 문제점 현재 rigth_seat가 아니라서 인식 안됨.
-               $(seatId).dblclick(function() {
-                  console.log("삭제삭제");
-                  var num = $(this).attr("num");
-                  console.log("nUM :" + num);
-                  
-                  seat.splice(num, 1);
-                  
-                  for (var n = parseInt(num); n < seat.length-1; n++) {
-                    console.log("num" + num);
-                    console.log("num:" + n);
-                    $(".pre_seat.right_seat")[n].setAttribute("id","s"+n);
-                    $(".pre_seat.right_seat")[n].setAttribute("num",n);
-                    $(".pre_seat.right_seat")[n].innerHTML = n;
-                    
-                    console.log("seat.length:" + seat.length);
-                  }
-                  $(this).remove();
-                  nSeat--;
-                  document.getElementById("pre_seat_case").lastChild.setAttribute("id","s"+(nSeat-1));    
-                  document.getElementById("pre_seat_case").lastChild.setAttribute("num",nSeat-1);    
-                  document.getElementById("pre_seat_case").lastChild.innerHTML = nSeat-1;    
-               });
-               
-               
-               //추가 좌석 수 확인 시 좌석 1개 생성. 조건을 통해 최대 갯수 생성 못하게 함.
-               if(nSeat <= newSeatCnt){
-                  addSeat(newSeatCnt_garo, newSeatCnt_sero);
-               }//if
-              
-            //이게 실행되면 revert옵션이 발생해야한다.
-            }else if(dupliCheck == true){
+       			console.log(dupliCheck);
+            if(dupliCheck == true){
                console.log("stop겹칩");
                  
             }else{
@@ -193,33 +140,51 @@
                //console.log(c3.style.left);
                //console.log(c3.style.top);
                c3.style.left = parseInt(c3.style.left.replace("px",""))-175+"px";
-               c3.style.top = parseInt(c3.style.top.replace("px",""))+117+"px";            
-                
-               var map = document.getElementById("map");
-               map.appendChild(c3);       
-               document.getElementById("pre_seat_case").lastChild.remove();
-               //삭제 메서드 추가 -/// 문제점 현재 rigth_seat가 아니라서 인식 안됨.
-               $(seatId).dblclick(function() {
+               c3.style.top = parseInt(c3.style.top.replace("px",""))+117+"px";
+             //삭제 메서드 추가 -/// 문제점 현재 rigth_seat가 아니라서 인식 안됨.
+               $(c3).dblclick(function() {
                   console.log("삭제삭제");
                   var num = $(this).attr("num");
                   
                   seat.splice(num, 1);
-                  
-                  for (var n = parseInt(num); n < seat.length-1; n++) {
-                    console.log("num" + num);
-                    console.log("num:" + n);
-                    $(".pre_seat.right_seat")[n].setAttribute("id","s"+n);
-                    $(".pre_seat.right_seat")[n].setAttribute("num",n);
-                    $(".pre_seat.right_seat")[n].innerHTML = n;
-                    
-                    console.log("seat.length:" + seat.length);
+                  if($(".left_seat").length == 1){
+	                  for (var n = parseInt(num); n < seat.length-1; n++) {
+	                    console.log("num" + num);
+	                    console.log("num:" + n);
+	                    $(".pre_seat.right_seat")[n].setAttribute("id","s"+n);
+	                    $(".pre_seat.right_seat")[n].setAttribute("num",n);
+	                    $(".pre_seat.right_seat")[n].innerHTML = n;
+	                    
+	                    console.log("seat.length:" + seat.length);
+	                  }
+	                  $(this).remove();
+	                  nSeat--; 
+	                 
+	                  document.getElementById("pre_seat_case").lastChild.setAttribute("id","s"+(nSeat-1));    
+	                  document.getElementById("pre_seat_case").lastChild.setAttribute("num",nSeat-1);    
+	                  document.getElementById("pre_seat_case").lastChild.innerHTML = nSeat-1;
+                  }else{
+                	  for (var n = parseInt(num); n < seat.length; n++) {
+  	                    console.log("num" + num);
+  	                    console.log("num:" + n);
+  	                    $(".pre_seat.right_seat")[n].setAttribute("id","s"+n);
+  	                    $(".pre_seat.right_seat")[n].setAttribute("num",n);
+  	                    $(".pre_seat.right_seat")[n].innerHTML = n;
+  	                    
+  	                    console.log("seat.length:" + seat.length);
+  	                  }
+  	                  $(this).remove();
+  	                  nSeat--; 
+  	                 
                   }
-                  $(this).remove();
-                  nSeat--; 
-                  document.getElementById("pre_seat_case").lastChild.setAttribute("id","s"+(nSeat-1));    
-                  document.getElementById("pre_seat_case").lastChild.setAttribute("num",nSeat-1);    
-                  document.getElementById("pre_seat_case").lastChild.innerHTML = nSeat-1; 
+            	 
                });
+                
+               var map = document.getElementById("map");
+               map.appendChild(c3);       
+               document.getElementById("pre_seat_case").lastChild.remove();
+               
+               
                //추가 좌석 수 확인 시 좌석 1개 생성. 조건을 통해 최대 갯수 생성 못하게 함.
                if(nSeat <= newSeatCnt){
                   addSeat(newSeatCnt_garo, newSeatCnt_sero);
@@ -266,16 +231,21 @@
       
       //추가 좌석 수 확인을 누르면
       $("#confirm").click(function(){
-
          newSeatCnt_garo = $("#input_seat_garo").val();//입력 받은 가로 좌석 수
          newSeatCnt_sero = $("#input_seat_sero").val();//입력 받은 세로 좌석 수
          newSeatCnt = newSeatCnt_sero * newSeatCnt_garo;
 		
          //console.log(newSeatCnt + ":" + nSeat);
          //추가 좌석 수 확인 시 좌석 1개 생성. 조건을 통해 최대 갯수 생성 못하게 함.
-         if(nSeat <= newSeatCnt){
-            addSeat(newSeatCnt_garo, newSeatCnt_sero);
-         }//if
+         
+         console.log($(".left_seat").length+"길이");
+         if($(".left_seat").length == 1){ //왼쪽에 좌석이 있을때
+        	 
+         }else{ //왼쪽에 좌석이 없을때
+	         if(nSeat <= newSeatCnt){//최대좌석 갯수가 현재좌석 갯수보다 클때
+	            addSeat(newSeatCnt_garo, newSeatCnt_sero);
+	         }
+         }
 
       });//좌석 추가 버튼 끝.
 
@@ -303,7 +273,7 @@
 
       //저장 버튼 누를 시 색상 변환(임시로 색깔 넣음)
       $("#save_btn").click(function() {
-         var pre_seat = $(".pre_seat");
+         var pre_seat = $(".right_seat");
 
          for (i = 0; i < pre_seat.length; i++) {
             var num = "#s" + (1 + i);
@@ -311,6 +281,8 @@
             $(num).css("background-color", "red");
             //임시로 저장된건 사용중으로 부여
             $(num).attr("use", "사용중");
+
+            console.log($(num).position().left +":"+$(num).position().top);
          }
 
          //좌석 출력 정보 초기화
